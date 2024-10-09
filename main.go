@@ -14,14 +14,12 @@ type Options struct {
 	Port           string
 	PostgresSqlDsn string
 	TrustedProxies string
-	AgentUrl       string
 }
 
 var DEFAULT_OPTIONS = map[string]string{
 	"PORT":             "8080",
 	"POSTGRES_SQL_DSN": "",
 	"TRUSTED_PROXIES":  "",
-	"AGENT_URL":        "",
 }
 
 func getOptions() *Options {
@@ -31,7 +29,6 @@ func getOptions() *Options {
 	options.Port = rawOptions["PORT"]
 	options.PostgresSqlDsn = rawOptions["POSTGRES_SQL_DSN"]
 	options.TrustedProxies = rawOptions["TRUSTED_PROXIES"]
-	options.AgentUrl = rawOptions["AGENT_URL"]
 
 	return options
 }
@@ -54,9 +51,6 @@ func main() {
 	}
 	if len(options.Port) == 0 {
 		panic("not found 'PORT' options")
-	}
-	if len(options.AgentUrl) == 0 {
-		panic("not found 'AGENT_URL' options")
 	}
 
 	database := pg.New(options.PostgresSqlDsn)
