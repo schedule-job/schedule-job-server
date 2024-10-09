@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schedule-job-server
+  labels:
+    app: schedule-job-server
+spec:
+  selector:
+    matchLabels:
+      app: schedule-job-server
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: schedule-job-server
+    spec:
+      containers:
+        - name: schedule-job-server
+          image: sotaneum/schedule-job-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: POSTGRES_SQL_DSN
+              value: "postgresql://{user}:{pw}@{host}:{port}/{db}?sslmode=disable&search_path={schema}"
+            - name: TRUSTED_PROXIES
+              value: "127.0.0.1,192.168.0.1"
+            - name: PORT
+              value: "8080"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: schedule-job-server-svc
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: schedule-job-server
