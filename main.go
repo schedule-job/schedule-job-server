@@ -170,7 +170,7 @@ func main() {
 
 	router.POST("/api/v1/pre-next/schedule/:name", func(ctx *gin.Context) {
 		name := ctx.Param("name")
-		payload := make(map[string]string)
+		payload := make(map[string]interface{})
 		bindErr := ctx.BindJSON(&payload)
 
 		if bindErr != nil {
@@ -192,6 +192,39 @@ func main() {
 		id := ctx.Param("id")
 
 		data, err := batchApi.GetNextSchedule(id)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": data})
+	})
+
+	router.POST("/api/v1/pre-next/info/:name", func(ctx *gin.Context) {
+		name := ctx.Param("name")
+		payload := make(map[string]interface{})
+		bindErr := ctx.BindJSON(&payload)
+
+		if bindErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+			return
+		}
+
+		data, err := batchApi.GetPreNextInfo(name, payload)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": data})
+	})
+
+	router.POST("/api/v1/next/info/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+
+		data, err := batchApi.GetNextInfo(id)
 
 		if err != nil {
 			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})

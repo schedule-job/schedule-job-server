@@ -67,7 +67,19 @@ func (b *Batch) toTime(data []byte) (*time.Time, error) {
 	return &t, nil
 }
 
-func (b *Batch) GetPreNextSchedule(name string, payload map[string]string) (*time.Time, error) {
+func (b *Batch) toJson(data []byte) (interface{}, error) {
+	var result map[string]interface{}
+
+	var unmarshalErr = json.Unmarshal([]byte(string(data)), &result)
+
+	if unmarshalErr != nil {
+		return nil, unmarshalErr
+	}
+
+	return result["data"], nil
+}
+
+func (b *Batch) GetPreNextSchedule(name string, payload map[string]interface{}) (*time.Time, error) {
 	path := fmt.Sprintf("/api/v1/schedule/pre-next/%s", name)
 	body, marshalErr := json.Marshal(payload)
 
@@ -94,4 +106,33 @@ func (b *Batch) GetNextSchedule(id string) (*time.Time, error) {
 	}
 
 	return b.toTime(data)
+}
+
+func (b *Batch) GetPreNextInfo(name string, payload map[string]interface{}) (interface{}, error) {
+	path := fmt.Sprintf("/api/v1/request/pre-next/%s", name)
+	body, marshalErr := json.Marshal(payload)
+
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
+
+	data, reqErr := b.request(path, bytes.NewBuffer(body))
+
+	if reqErr != nil {
+		return nil, reqErr
+	}
+
+	return b.toJson(data)
+}
+
+func (b *Batch) GetNextInfo(id string) (interface{}, error) {
+	path := fmt.Sprintf("/api/v1/request/next/%s", id)
+
+	data, reqErr := b.request(path, nil)
+
+	if reqErr != nil {
+		return nil, reqErr
+	}
+
+	return b.toJson(data)
 }
