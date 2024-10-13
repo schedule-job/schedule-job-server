@@ -170,7 +170,7 @@ func main() {
 
 	router.POST("/api/v1/pre-next/schedule/:name", func(ctx *gin.Context) {
 		name := ctx.Param("name")
-		payload := make(map[string]string)
+		payload := make(map[string]interface{})
 		bindErr := ctx.BindJSON(&payload)
 
 		if bindErr != nil {

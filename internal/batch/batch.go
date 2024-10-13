@@ -67,7 +67,7 @@ func (b *Batch) toTime(data []byte) (*time.Time, error) {
 	return &t, nil
 }
 
-func (b *Batch) GetPreNextSchedule(name string, payload map[string]string) (*time.Time, error) {
+func (b *Batch) GetPreNextSchedule(name string, payload map[string]interface{}) (*time.Time, error) {
 	path := fmt.Sprintf("/api/v1/schedule/pre-next/%s", name)
 	body, marshalErr := json.Marshal(payload)
 
