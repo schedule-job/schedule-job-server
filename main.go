@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	ginsession "github.com/go-session/gin-session"
 	"github.com/schedule-job/schedule-job-server/internal/agent"
+	"github.com/schedule-job/schedule-job-server/internal/batch"
 	"github.com/schedule-job/schedule-job-server/internal/oauth"
 )
 
@@ -18,6 +19,7 @@ type Options struct {
 	PostgresSqlDsn string
 	TrustedProxies []string
 	AgentUrls      []string
+	BatchUrls      []string
 }
 
 var DEFAULT_OPTIONS = map[string]string{
@@ -25,6 +27,7 @@ var DEFAULT_OPTIONS = map[string]string{
 	"POSTGRES_SQL_DSN": "",
 	"TRUSTED_PROXIES":  "",
 	"AGENT_URLS":       "",
+	"BATCH_URLS":       "",
 }
 
 func getOptions() *Options {
@@ -42,6 +45,11 @@ func getOptions() *Options {
 		options.AgentUrls = strings.Split(rawOptions["AGENT_URLS"], ",")
 	} else {
 		options.AgentUrls = []string{}
+	}
+	if rawOptions["BATCH_URLS"] != "" {
+		options.BatchUrls = strings.Split(rawOptions["BATCH_URLS"], ",")
+	} else {
+		options.BatchUrls = []string{}
 	}
 
 	return options
@@ -69,6 +77,9 @@ func main() {
 
 	agentApi := agent.Agent{}
 	agentApi.SetAgentUrls(options.AgentUrls)
+
+	batchApi := batch.Batch{}
+	batchApi.SetBatchUrls(options.BatchUrls)
 
 	router := gin.Default()
 	router.Use(ginsession.New())
@@ -155,6 +166,39 @@ func main() {
 		}
 
 		ctx.Data(200, "application/json", body)
+	})
+
+	router.POST("/api/v1/pre-next/schedule/:name", func(ctx *gin.Context) {
+		name := ctx.Param("name")
+		payload := make(map[string]string)
+		bindErr := ctx.BindJSON(&payload)
+
+		if bindErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+			return
+		}
+
+		data, err := batchApi.GetPreNextSchedule(name, payload)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": data})
+	})
+
+	router.POST("/api/v1/next/schedule/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+
+		data, err := batchApi.GetNextSchedule(id)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": data})
 	})
 
 	router.NoRoute(func(ctx *gin.Context) {
