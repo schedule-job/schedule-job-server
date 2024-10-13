@@ -3,25 +3,28 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	parser "github.com/Sotaneum/go-args-parser"
 	"github.com/gin-gonic/gin"
 	ginsession "github.com/go-session/gin-session"
+	"github.com/schedule-job/schedule-job-server/internal/agent"
 	"github.com/schedule-job/schedule-job-server/internal/oauth"
-	"github.com/schedule-job/schedule-job-server/internal/pg"
 )
 
 type Options struct {
 	Port           string
 	PostgresSqlDsn string
-	TrustedProxies string
+	TrustedProxies []string
+	AgentUrls      []string
 }
 
 var DEFAULT_OPTIONS = map[string]string{
 	"PORT":             "8080",
 	"POSTGRES_SQL_DSN": "",
 	"TRUSTED_PROXIES":  "",
+	"AGENT_URLS":       "",
 }
 
 func getOptions() *Options {
@@ -30,7 +33,16 @@ func getOptions() *Options {
 	options := new(Options)
 	options.Port = rawOptions["PORT"]
 	options.PostgresSqlDsn = rawOptions["POSTGRES_SQL_DSN"]
-	options.TrustedProxies = rawOptions["TRUSTED_PROXIES"]
+	if rawOptions["TRUSTED_PROXIES"] != "" {
+		options.TrustedProxies = strings.Split(rawOptions["TRUSTED_PROXIES"], ",")
+	} else {
+		options.TrustedProxies = []string{}
+	}
+	if rawOptions["AGENT_URLS"] != "" {
+		options.AgentUrls = strings.Split(rawOptions["AGENT_URLS"], ",")
+	} else {
+		options.AgentUrls = []string{}
+	}
 
 	return options
 }
@@ -55,15 +67,12 @@ func main() {
 		panic("not found 'PORT' options")
 	}
 
-	database := pg.New(options.PostgresSqlDsn)
+	agentApi := agent.Agent{}
+	agentApi.SetAgentUrls(options.AgentUrls)
 
 	router := gin.Default()
 	router.Use(ginsession.New())
-
-	if options.TrustedProxies != "" {
-		trustedProxies := strings.Split(options.TrustedProxies, ",")
-		router.SetTrustedProxies(trustedProxies)
-	}
+	router.SetTrustedProxies(options.TrustedProxies)
 
 	router.GET("/auth/:name/login", func(ctx *gin.Context) {
 		name := ctx.Param("name")
@@ -110,6 +119,42 @@ func main() {
 		encoder := json.NewEncoder(ctx.Writer)
 		encoder.SetEscapeHTML(false)
 		encoder.Encode(gin.H{"code": 200, "data": providers})
+	})
+
+	router.GET("/api/v1/logs/:jobId", func(ctx *gin.Context) {
+		limit := 0
+		jobId := ctx.Param("jobId")
+		lastId := ctx.Query("last_id")
+
+		if ctx.Query("limit") != "" {
+			cnvI, err := strconv.Atoi(ctx.Query("limit"))
+			if err != nil {
+				limit = cnvI
+			}
+		}
+
+		body, err := agentApi.GetLogs(jobId, lastId, limit)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.Data(200, "application/json", body)
+	})
+
+	router.GET("/api/v1/logs/:jobId/:id", func(ctx *gin.Context) {
+		jobId := ctx.Param("jobId")
+		id := ctx.Param("id")
+
+		body, err := agentApi.GetLog(jobId, id)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.Data(200, "application/json", body)
 	})
 
 	router.NoRoute(func(ctx *gin.Context) {
