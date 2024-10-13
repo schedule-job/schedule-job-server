@@ -234,6 +234,19 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": data})
 	})
 
+	router.POST("/api/v1/progress/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+
+		err := batchApi.ProgressOnce(id)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": "ok"})
+	})
+
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(404, gin.H{"code": 404, "message": "접근 할 수 없는 페이지입니다!"})
 	})
