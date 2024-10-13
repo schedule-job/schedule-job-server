@@ -273,6 +273,14 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": id})
 	})
 
+	router.DELETE("/api/v1/job/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+
+		jobApi.DeleteJob(id)
+
+		ctx.JSON(200, gin.H{"code": 200, "data": "ok"})
+	})
+
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(404, gin.H{"code": 404, "message": "접근 할 수 없는 페이지입니다!"})
 	})
