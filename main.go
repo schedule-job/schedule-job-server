@@ -201,6 +201,39 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": data})
 	})
 
+	router.POST("/api/v1/pre-next/info/:name", func(ctx *gin.Context) {
+		name := ctx.Param("name")
+		payload := make(map[string]interface{})
+		bindErr := ctx.BindJSON(&payload)
+
+		if bindErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+			return
+		}
+
+		data, err := batchApi.GetPreNextInfo(name, payload)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": data})
+	})
+
+	router.POST("/api/v1/next/info/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+
+		data, err := batchApi.GetNextInfo(id)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": data})
+	})
+
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(404, gin.H{"code": 404, "message": "접근 할 수 없는 페이지입니다!"})
 	})
