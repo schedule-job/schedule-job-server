@@ -54,3 +54,9 @@ func (j *Job) InsertJob(item InsertItem) (string, error) {
 
 	return id, nil
 }
+
+func (j *Job) DeleteJob(id string) {
+	j.db.DeleteAction(id)
+	j.db.DeleteTrigger(id)
+	j.db.DeleteJob(id)
+}
