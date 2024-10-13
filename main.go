@@ -11,7 +11,9 @@ import (
 	ginsession "github.com/go-session/gin-session"
 	"github.com/schedule-job/schedule-job-server/internal/agent"
 	"github.com/schedule-job/schedule-job-server/internal/batch"
+	"github.com/schedule-job/schedule-job-server/internal/job"
 	"github.com/schedule-job/schedule-job-server/internal/oauth"
+	"github.com/schedule-job/schedule-job-server/internal/pg"
 )
 
 type Options struct {
@@ -75,11 +77,16 @@ func main() {
 		panic("not found 'PORT' options")
 	}
 
+	database := pg.New(options.PostgresSqlDsn)
+
 	agentApi := agent.Agent{}
 	agentApi.SetAgentUrls(options.AgentUrls)
 
 	batchApi := batch.Batch{}
 	batchApi.SetBatchUrls(options.BatchUrls)
+
+	jobApi := job.Job{}
+	jobApi.SetDatabase(database)
 
 	router := gin.Default()
 	router.Use(ginsession.New())
@@ -245,6 +252,25 @@ func main() {
 		}
 
 		ctx.JSON(200, gin.H{"code": 200, "data": "ok"})
+	})
+
+	router.POST("/api/v1/job", func(ctx *gin.Context) {
+		payload := job.InsertItem{}
+		bindErr := ctx.BindJSON(&payload)
+
+		if bindErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+			return
+		}
+
+		id, insertErr := jobApi.InsertJob(payload)
+
+		if insertErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": insertErr.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": id})
 	})
 
 	router.NoRoute(func(ctx *gin.Context) {
