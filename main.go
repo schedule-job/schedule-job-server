@@ -281,6 +281,45 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": "ok"})
 	})
 
+	router.GET("/api/v1/job/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+
+		info, err := database.SelectJob(id)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": info})
+	})
+
+	router.GET("/api/v1/action/:job_id", func(ctx *gin.Context) {
+		job_id := ctx.Param("job_id")
+
+		info, err := database.SelectAction(job_id)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": info})
+	})
+
+	router.GET("/api/v1/trigger/:job_id", func(ctx *gin.Context) {
+		job_id := ctx.Param("job_id")
+
+		info, err := database.SelectTrigger(job_id)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": info})
+	})
+
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(404, gin.H{"code": 404, "message": "접근 할 수 없는 페이지입니다!"})
 	})
