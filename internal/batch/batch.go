@@ -136,3 +136,27 @@ func (b *Batch) GetNextInfo(id string) (interface{}, error) {
 
 	return b.toJson(data)
 }
+
+func (b *Batch) Progress() error {
+	path := "/api/v1/progress"
+
+	_, reqErr := b.request(path, nil)
+
+	if reqErr != nil {
+		return reqErr
+	}
+
+	return nil
+}
+
+func (b *Batch) ProgressOnce(id string) error {
+	path := fmt.Sprintf("/api/v1/progress/%s", id)
+
+	_, reqErr := b.request(path, nil)
+
+	if reqErr != nil {
+		return reqErr
+	}
+
+	return nil
+}
