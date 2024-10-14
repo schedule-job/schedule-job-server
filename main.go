@@ -273,6 +273,31 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": id})
 	})
 
+	router.GET("/api/v1/jobs", func(ctx *gin.Context) {
+		lastId := ctx.Query("last_id")
+		limit, cnvErr := strconv.Atoi(ctx.Query("limit"))
+		if cnvErr != nil {
+			limit = 20
+		}
+
+		store := ginsession.FromContext(ctx)
+		email, has := store.Get("userEmail")
+
+		if !has {
+			ctx.JSON(401, gin.H{"code": 401, "message": "need logged in"})
+			return
+		}
+
+		body, err := database.SelectJobs(email.(string), lastId, limit)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": body})
+	})
+
 	router.DELETE("/api/v1/job/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
 
@@ -400,7 +425,6 @@ func main() {
 
 		ctx.JSON(200, gin.H{"code": 200, "data": "ok"})
 	})
-
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(404, gin.H{"code": 404, "message": "접근 할 수 없는 페이지입니다!"})
 	})
