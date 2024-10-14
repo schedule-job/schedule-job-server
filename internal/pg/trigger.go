@@ -25,6 +25,10 @@ func (p *PostgresSQL) InsertTrigger(job_id, name string, payload map[string]inte
 	return err
 }
 
+func (p *PostgresSQL) UpdateTrigger(job_id, name string, payload map[string]interface{}) error {
+	return p.InsertTrigger(job_id, name, payload)
+}
+
 func (p *PostgresSQL) DeleteTrigger(job_id string) error {
 	_, err := p.usePostgresSQL(func(client *pgx.Conn, ctx context.Context) (result interface{}, err error) {
 		_, execErr := client.Exec(ctx, "DELETE FROM trigger WHERE job_id = $1", job_id)
@@ -41,7 +45,7 @@ func (p *PostgresSQL) DeleteTrigger(job_id string) error {
 func (p *PostgresSQL) SelectTrigger(job_id string) (*triggerInfo, error) {
 	info := triggerInfo{}
 	_, err := p.usePostgresSQL(func(client *pgx.Conn, ctx context.Context) (result interface{}, err error) {
-		queryErr := client.QueryRow(ctx, "SELECT job_id, name, payload FROM action WHERE job_id = $1 ORDER BY created_at", job_id).Scan(
+		queryErr := client.QueryRow(ctx, "SELECT job_id, name, payload FROM action WHERE job_id = $1 ORDER BY created_at desc", job_id).Scan(
 			&info.JobId,
 			&info.Name,
 			&info.Payload,
