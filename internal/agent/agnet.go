@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/schedule-job/schedule-job-server/internal/errorset"
 )
 
 type Agent struct {
@@ -27,19 +29,19 @@ func (a *Agent) request(path string) ([]byte, error) {
 	for _, agentUrl := range a.agentUrls {
 		url := agentUrl + path
 
-		resp, err := client.Get(url)
-		if err != nil {
-			if err == context.DeadlineExceeded {
+		resp, errResp := client.Get(url)
+		if errResp != nil {
+			if errResp == context.DeadlineExceeded {
 				continue
 			}
-			return nil, err
+			return nil, errResp
 		}
 
 		defer resp.Body.Close()
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
+		body, errRead := io.ReadAll(resp.Body)
+		if errRead != nil {
+			return nil, errRead
 		}
 
 		return body, nil
@@ -62,7 +64,7 @@ func (a *Agent) GetLogs(jobId, lastId string, limit int) ([]byte, error) {
 	resp, err := a.request(path)
 
 	if err != nil {
-		return nil, err
+		return nil, errorset.ErrInternalServer
 	}
 
 	return resp, nil
@@ -74,7 +76,7 @@ func (a *Agent) GetLog(jobId, id string) ([]byte, error) {
 	resp, err := a.request(path)
 
 	if err != nil {
-		return nil, err
+		return nil, errorset.ErrInternalServer
 	}
 
 	return resp, nil
