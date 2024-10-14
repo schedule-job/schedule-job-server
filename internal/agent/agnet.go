@@ -2,13 +2,15 @@ package agent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/schedule-job/schedule-job-server/internal/errorset"
 )
 
 type Agent struct {
@@ -27,25 +29,28 @@ func (a *Agent) request(path string) ([]byte, error) {
 	for _, agentUrl := range a.agentUrls {
 		url := agentUrl + path
 
-		resp, err := client.Get(url)
-		if err != nil {
-			if err == context.DeadlineExceeded {
+		resp, errResp := client.Get(url)
+		if errResp != nil {
+			if errResp == context.DeadlineExceeded {
 				continue
 			}
-			return nil, err
+			log.Fatalln(errResp.Error())
+			return nil, errResp
 		}
 
 		defer resp.Body.Close()
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
+		body, errRead := io.ReadAll(resp.Body)
+		if errRead != nil {
+			log.Fatalln(errRead.Error())
+			return nil, errRead
 		}
 
 		return body, nil
 	}
 
-	return nil, errors.New("no agent url")
+	log.Fatalln("no agent url")
+	return nil, errorset.ErrInternalServer
 }
 
 func (a *Agent) GetLogs(jobId, lastId string, limit int) ([]byte, error) {
@@ -62,7 +67,8 @@ func (a *Agent) GetLogs(jobId, lastId string, limit int) ([]byte, error) {
 	resp, err := a.request(path)
 
 	if err != nil {
-		return nil, err
+		log.Fatalln(err.Error())
+		return nil, errorset.ErrInternalServer
 	}
 
 	return resp, nil
@@ -74,7 +80,8 @@ func (a *Agent) GetLog(jobId, id string) ([]byte, error) {
 	resp, err := a.request(path)
 
 	if err != nil {
-		return nil, err
+		log.Fatalln(err.Error())
+		return nil, errorset.ErrInternalServer
 	}
 
 	return resp, nil

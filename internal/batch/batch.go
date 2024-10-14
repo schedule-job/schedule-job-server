@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
+
+	"github.com/schedule-job/schedule-job-server/internal/errorset"
 )
 
 type Batch struct {
@@ -27,41 +29,46 @@ func (b *Batch) request(path string, body io.Reader) ([]byte, error) {
 	for _, batchUrl := range b.batchUrls {
 		url := batchUrl + path
 
-		resp, err := client.Post(url, "application/json", body)
-		if err != nil {
-			if err == context.DeadlineExceeded {
+		resp, errResp := client.Post(url, "application/json", body)
+		if errResp != nil {
+			if errResp == context.DeadlineExceeded {
 				continue
 			}
-			return nil, err
+			log.Fatalln(errResp.Error())
+			return nil, errResp
 		}
 
 		defer resp.Body.Close()
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
+		body, errRead := io.ReadAll(resp.Body)
+		if errRead != nil {
+			log.Fatalln(errRead.Error())
+			return nil, errRead
 		}
 
 		return body, nil
 	}
 
-	return nil, errors.New("no agent url")
+	log.Fatalln("no batch url")
+	return nil, errorset.ErrInternalServer
 }
 
 func (b *Batch) toTime(data []byte) (*time.Time, error) {
 	var result map[string]interface{}
 
-	var unmarshalErr = json.Unmarshal([]byte(string(data)), &result)
+	var errUnmarshal = json.Unmarshal([]byte(string(data)), &result)
 
-	if unmarshalErr != nil {
-		return nil, unmarshalErr
+	if errUnmarshal != nil {
+		log.Fatalln(errUnmarshal.Error())
+		return nil, errUnmarshal
 	}
 
 	layout := "2006-01-02T15:04:05Z"
-	t, parseErr := time.Parse(layout, result["data"].(string))
+	t, errParse := time.Parse(layout, result["data"].(string))
 
-	if parseErr != nil {
-		return nil, parseErr
+	if errParse != nil {
+		log.Fatalln(errParse.Error())
+		return nil, errParse
 	}
 
 	return &t, nil
@@ -70,10 +77,11 @@ func (b *Batch) toTime(data []byte) (*time.Time, error) {
 func (b *Batch) toJson(data []byte) (interface{}, error) {
 	var result map[string]interface{}
 
-	var unmarshalErr = json.Unmarshal([]byte(string(data)), &result)
+	var errUnmarshal = json.Unmarshal([]byte(string(data)), &result)
 
-	if unmarshalErr != nil {
-		return nil, unmarshalErr
+	if errUnmarshal != nil {
+		log.Fatalln(errUnmarshal.Error())
+		return nil, errUnmarshal
 	}
 
 	return result["data"], nil
@@ -81,69 +89,104 @@ func (b *Batch) toJson(data []byte) (interface{}, error) {
 
 func (b *Batch) GetPreNextSchedule(name string, payload map[string]interface{}) (*time.Time, error) {
 	path := fmt.Sprintf("/api/v1/schedule/pre-next/%s", name)
-	body, marshalErr := json.Marshal(payload)
+	body, errMarshal := json.Marshal(payload)
 
-	if marshalErr != nil {
-		return nil, marshalErr
+	if errMarshal != nil {
+		log.Fatalln(errMarshal.Error())
+		return nil, errMarshal
 	}
 
-	data, reqErr := b.request(path, bytes.NewBuffer(body))
+	data, errReq := b.request(path, bytes.NewBuffer(body))
 
-	if reqErr != nil {
-		return nil, reqErr
+	if errReq != nil {
+		log.Fatalln(errReq.Error())
+		return nil, errorset.ErrInternalServer
 	}
 
-	return b.toTime(data)
+	time, errTime := b.toTime(data)
+
+	if errTime != nil {
+		log.Fatalln(errTime.Error())
+		return nil, errorset.ErrInternalServer
+	}
+
+	return time, nil
 }
 
 func (b *Batch) GetNextSchedule(id string) (*time.Time, error) {
 	path := fmt.Sprintf("/api/v1/schedule/next/%s", id)
 
-	data, reqErr := b.request(path, nil)
+	data, errReq := b.request(path, nil)
 
-	if reqErr != nil {
-		return nil, reqErr
+	if errReq != nil {
+		log.Fatalln(errReq.Error())
+		return nil, errorset.ErrInternalServer
 	}
 
-	return b.toTime(data)
+	time, errTime := b.toTime(data)
+
+	if errTime != nil {
+		log.Fatalln(errTime.Error())
+		return nil, errorset.ErrInternalServer
+	}
+
+	return time, nil
 }
 
 func (b *Batch) GetPreNextInfo(name string, payload map[string]interface{}) (interface{}, error) {
 	path := fmt.Sprintf("/api/v1/request/pre-next/%s", name)
-	body, marshalErr := json.Marshal(payload)
+	body, errMarshal := json.Marshal(payload)
 
-	if marshalErr != nil {
-		return nil, marshalErr
+	if errMarshal != nil {
+		log.Fatalln(errMarshal.Error())
+		return nil, errMarshal
 	}
 
-	data, reqErr := b.request(path, bytes.NewBuffer(body))
+	data, errReq := b.request(path, bytes.NewBuffer(body))
 
-	if reqErr != nil {
-		return nil, reqErr
+	if errReq != nil {
+		log.Fatalln(errReq.Error())
+		return nil, errorset.ErrInternalServer
 	}
 
-	return b.toJson(data)
+	json, errJson := b.toJson(data)
+
+	if errJson != nil {
+		log.Fatalln(errJson.Error())
+		return nil, errorset.ErrInternalServer
+	}
+
+	return json, nil
 }
 
 func (b *Batch) GetNextInfo(id string) (interface{}, error) {
 	path := fmt.Sprintf("/api/v1/request/next/%s", id)
 
-	data, reqErr := b.request(path, nil)
+	data, errReq := b.request(path, nil)
 
-	if reqErr != nil {
-		return nil, reqErr
+	if errReq != nil {
+		log.Fatalln(errReq.Error())
+		return nil, errorset.ErrInternalServer
 	}
 
-	return b.toJson(data)
+	json, errJson := b.toJson(data)
+
+	if errJson != nil {
+		log.Fatalln(errJson.Error())
+		return nil, errorset.ErrInternalServer
+	}
+
+	return json, nil
 }
 
 func (b *Batch) Progress() error {
 	path := "/api/v1/progress"
 
-	_, reqErr := b.request(path, nil)
+	_, errReq := b.request(path, nil)
 
-	if reqErr != nil {
-		return reqErr
+	if errReq != nil {
+		log.Fatalln(errReq.Error())
+		return errorset.ErrInternalServer
 	}
 
 	return nil
@@ -152,10 +195,11 @@ func (b *Batch) Progress() error {
 func (b *Batch) ProgressOnce(id string) error {
 	path := fmt.Sprintf("/api/v1/progress/%s", id)
 
-	_, reqErr := b.request(path, nil)
+	_, errReq := b.request(path, nil)
 
-	if reqErr != nil {
-		return reqErr
+	if errReq != nil {
+		log.Fatalln(errReq.Error())
+		return errorset.ErrInternalServer
 	}
 
 	return nil

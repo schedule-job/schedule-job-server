@@ -11,6 +11,7 @@ import (
 	ginsession "github.com/go-session/gin-session"
 	"github.com/schedule-job/schedule-job-server/internal/agent"
 	"github.com/schedule-job/schedule-job-server/internal/batch"
+	"github.com/schedule-job/schedule-job-server/internal/errorset"
 	"github.com/schedule-job/schedule-job-server/internal/job"
 	"github.com/schedule-job/schedule-job-server/internal/oauth"
 	"github.com/schedule-job/schedule-job-server/internal/pg"
@@ -106,9 +107,9 @@ func main() {
 
 	router.GET("/auth/:name/callback", func(ctx *gin.Context) {
 		name := ctx.Param("name")
-		user, userErr := oauth.Core.GetUser(name, ctx.Query("code"))
-		if userErr != nil {
-			ctx.AbortWithError(500, userErr)
+		user, errUser := oauth.Core.GetUser(name, ctx.Query("code"))
+		if errUser != nil {
+			ctx.AbortWithError(403, errorset.ErrForbidden)
 			return
 		}
 
@@ -116,10 +117,10 @@ func main() {
 		store.Set("userName", user.Name)
 		store.Set("userEmail", user.Email)
 
-		storeErr := store.Save()
+		errStore := store.Save()
 
-		if storeErr != nil {
-			ctx.AbortWithError(500, storeErr)
+		if errStore != nil {
+			ctx.AbortWithError(500, errorset.ErrInternalServer)
 			return
 		}
 
@@ -130,7 +131,7 @@ func main() {
 		providers, err := oauth.Core.GetProviders()
 
 		if err != nil {
-			ctx.AbortWithError(500, err)
+			ctx.AbortWithError(500, errorset.ErrInternalServer)
 			return
 		}
 
@@ -145,16 +146,16 @@ func main() {
 		lastId := ctx.Query("last_id")
 
 		if ctx.Query("limit") != "" {
-			cnvI, err := strconv.Atoi(ctx.Query("limit"))
-			if err != nil {
-				limit = cnvI
+			newLimit, errAtoi := strconv.Atoi(ctx.Query("limit"))
+			if errAtoi != nil {
+				limit = newLimit
 			}
 		}
 
-		body, err := agentApi.GetLogs(jobId, lastId, limit)
+		body, errApi := agentApi.GetLogs(jobId, lastId, limit)
 
-		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+		if errApi != nil {
+			ctx.AbortWithError(500, errApi)
 			return
 		}
 
@@ -168,7 +169,7 @@ func main() {
 		body, err := agentApi.GetLog(jobId, id)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(500, err)
 			return
 		}
 
@@ -178,17 +179,17 @@ func main() {
 	router.POST("/api/v1/pre-next/schedule/:name", func(ctx *gin.Context) {
 		name := ctx.Param("name")
 		payload := make(map[string]interface{})
-		bindErr := ctx.BindJSON(&payload)
+		errBind := ctx.BindJSON(&payload)
 
-		if bindErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+		if errBind != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
 		data, err := batchApi.GetPreNextSchedule(name, payload)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(500, errorset.ErrInternalServer)
 			return
 		}
 
@@ -201,7 +202,7 @@ func main() {
 		data, err := batchApi.GetNextSchedule(jobId)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(500, errorset.ErrInternalServer)
 			return
 		}
 
@@ -211,17 +212,17 @@ func main() {
 	router.POST("/api/v1/pre-next/info/:name", func(ctx *gin.Context) {
 		name := ctx.Param("name")
 		payload := make(map[string]interface{})
-		bindErr := ctx.BindJSON(&payload)
+		errBind := ctx.BindJSON(&payload)
 
-		if bindErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+		if errBind != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
 		data, err := batchApi.GetPreNextInfo(name, payload)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(500, err)
 			return
 		}
 
@@ -234,7 +235,7 @@ func main() {
 		data, err := batchApi.GetNextInfo(jobId)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(500, errorset.ErrInternalServer)
 			return
 		}
 
@@ -247,7 +248,7 @@ func main() {
 		err := batchApi.ProgressOnce(jobId)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(500, errorset.ErrInternalServer)
 			return
 		}
 
@@ -256,17 +257,17 @@ func main() {
 
 	router.POST("/api/v1/job", func(ctx *gin.Context) {
 		payload := job.InsertItem{}
-		bindErr := ctx.BindJSON(&payload)
+		errBind := ctx.BindJSON(&payload)
 
-		if bindErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+		if errBind != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
-		id, insertErr := jobApi.InsertJob(payload)
+		id, errInsert := jobApi.InsertJob(payload)
 
-		if insertErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": insertErr.Error()})
+		if errInsert != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
@@ -275,8 +276,8 @@ func main() {
 
 	router.GET("/api/v1/jobs", func(ctx *gin.Context) {
 		lastId := ctx.Query("last_id")
-		limit, cnvErr := strconv.Atoi(ctx.Query("limit"))
-		if cnvErr != nil {
+		limit, errAtoi := strconv.Atoi(ctx.Query("limit"))
+		if errAtoi != nil {
 			limit = 20
 		}
 
@@ -284,14 +285,14 @@ func main() {
 		email, has := store.Get("userEmail")
 
 		if !has {
-			ctx.JSON(401, gin.H{"code": 401, "message": "need logged in"})
+			ctx.AbortWithError(401, errorset.ErrOAuth)
 			return
 		}
 
 		body, err := database.SelectJobs(email.(string), lastId, limit)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
@@ -312,7 +313,7 @@ func main() {
 		info, err := database.SelectJob(jobId)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
@@ -322,24 +323,24 @@ func main() {
 	router.PUT("/api/v1/job/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
 		payload := job.Info{}
-		bindErr := ctx.BindJSON(&payload)
+		errBind := ctx.BindJSON(&payload)
 
-		if bindErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+		if errBind != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
 		_, err := database.SelectJob(jobId)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
-		updateErr := database.UpdateJob(jobId, payload.Name, payload.Description, payload.Author, payload.Members)
+		errUpdate := database.UpdateJob(jobId, payload.Name, payload.Description, payload.Author, payload.Members)
 
-		if updateErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": updateErr.Error()})
+		if errUpdate != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
@@ -352,7 +353,7 @@ func main() {
 		info, err := database.SelectAction(jobId)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
@@ -362,24 +363,24 @@ func main() {
 	router.PUT("/api/v1/action/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
 		payload := job.Item{}
-		bindErr := ctx.BindJSON(&payload)
+		errBind := ctx.BindJSON(&payload)
 
-		if bindErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+		if errBind != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
 		_, err := database.SelectAction(jobId)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
-		insertErr := database.UpdateAction(jobId, payload.Name, payload.Payload)
+		errInsert := database.UpdateAction(jobId, payload.Name, payload.Payload)
 
-		if insertErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": insertErr.Error()})
+		if errInsert != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
@@ -392,7 +393,7 @@ func main() {
 		info, err := database.SelectTrigger(jobId)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
@@ -402,24 +403,24 @@ func main() {
 	router.PUT("/api/v1/trigger/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
 		payload := job.Item{}
-		bindErr := ctx.BindJSON(&payload)
+		errBind := ctx.BindJSON(&payload)
 
-		if bindErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+		if errBind != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
 		_, err := database.SelectTrigger(jobId)
 
 		if err != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
-		insertErr := database.UpdateTrigger(jobId, payload.Name, payload.Payload)
+		errInsert := database.UpdateTrigger(jobId, payload.Name, payload.Payload)
 
-		if insertErr != nil {
-			ctx.JSON(400, gin.H{"code": 400, "message": insertErr.Error()})
+		if errInsert != nil {
+			ctx.AbortWithError(400, errorset.ErrParams)
 			return
 		}
 
