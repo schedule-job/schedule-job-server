@@ -2,9 +2,9 @@ package agent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -34,6 +34,7 @@ func (a *Agent) request(path string) ([]byte, error) {
 			if errResp == context.DeadlineExceeded {
 				continue
 			}
+			log.Fatalln(errResp.Error())
 			return nil, errResp
 		}
 
@@ -41,13 +42,15 @@ func (a *Agent) request(path string) ([]byte, error) {
 
 		body, errRead := io.ReadAll(resp.Body)
 		if errRead != nil {
+			log.Fatalln(errRead.Error())
 			return nil, errRead
 		}
 
 		return body, nil
 	}
 
-	return nil, errors.New("no agent url")
+	log.Fatalln("no agent url")
+	return nil, errorset.ErrInternalServer
 }
 
 func (a *Agent) GetLogs(jobId, lastId string, limit int) ([]byte, error) {
@@ -64,6 +67,7 @@ func (a *Agent) GetLogs(jobId, lastId string, limit int) ([]byte, error) {
 	resp, err := a.request(path)
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return nil, errorset.ErrInternalServer
 	}
 
@@ -76,6 +80,7 @@ func (a *Agent) GetLog(jobId, id string) ([]byte, error) {
 	resp, err := a.request(path)
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return nil, errorset.ErrInternalServer
 	}
 

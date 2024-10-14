@@ -68,6 +68,7 @@ func (o *OAuth) GetUser(name string, code string) (*User, error) {
 	}
 
 	if o.providers[name] == nil {
+		log.Fatalln("no such provider")
 		return nil, errorset.ErrOAuth
 	}
 

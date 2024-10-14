@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/schedule-job/schedule-job-server/internal/errorset"
@@ -23,6 +24,7 @@ func (p *PostgresSQL) InsertAction(job_id, name string, payload map[string]inter
 		return nil, nil
 	})
 	if err != nil {
+		log.Fatalln(err.Error())
 		return errorset.ErrSQL
 	}
 	return nil
@@ -41,6 +43,7 @@ func (p *PostgresSQL) DeleteAction(job_id string) error {
 		return nil, nil
 	})
 	if err != nil {
+		log.Fatalln(err.Error())
 		return errorset.ErrSQL
 	}
 	return nil
@@ -63,6 +66,7 @@ func (p *PostgresSQL) SelectAction(job_id string) (*actionInfo, error) {
 	})
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return nil, errorset.ErrSQL
 	}
 

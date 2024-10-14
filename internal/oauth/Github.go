@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/schedule-job/schedule-job-server/internal/errorset"
@@ -37,12 +38,14 @@ func (g *Github) getAccessToken(code string) (string, error) {
 	body, errMarshal := json.Marshal(payload)
 
 	if errMarshal != nil {
+		log.Fatalln(errMarshal.Error())
 		return "", errorset.ErrOAuth
 	}
 
 	req, errReq := http.NewRequest("POST", g.GithubAccessTokenAPI, bytes.NewReader(body))
 
 	if errReq != nil {
+		log.Fatalln(errReq.Error())
 		return "", errorset.ErrOAuth
 	}
 
@@ -53,6 +56,7 @@ func (g *Github) getAccessToken(code string) (string, error) {
 	res, errRes := client.Do(req)
 
 	if errRes != nil {
+		log.Fatalln(errRes.Error())
 		return "", errorset.ErrOAuth
 	}
 
@@ -62,10 +66,12 @@ func (g *Github) getAccessToken(code string) (string, error) {
 	errDecode := json.NewDecoder(res.Body).Decode(&userData)
 
 	if errDecode != nil {
+		log.Fatalln(errDecode.Error())
 		return "", errorset.ErrOAuth
 	}
 
 	if userData["error"] != "" && userData["error"] != nil {
+		log.Fatalln(userData["error_description"].(string) + " more info : " + userData["error_uri"].(string))
 		return "", errorset.ErrOAuth
 	}
 
@@ -76,6 +82,7 @@ func (g *Github) getUser(accessToken string) (*User, error) {
 	req, errReq := http.NewRequest("GET", g.GithubUserAPI, nil)
 
 	if errReq != nil {
+		log.Fatalln(errReq.Error())
 		return nil, errorset.ErrOAuth
 	}
 
@@ -85,12 +92,14 @@ func (g *Github) getUser(accessToken string) (*User, error) {
 	res, errRes := client.Do(req)
 
 	if errRes != nil {
+		log.Fatalln(errRes.Error())
 		return nil, errorset.ErrOAuth
 	}
 
 	read, errRead := io.ReadAll(res.Body)
 
 	if errRead != nil {
+		log.Fatalln(errRead.Error())
 		return nil, errorset.ErrOAuth
 	}
 
@@ -99,6 +108,7 @@ func (g *Github) getUser(accessToken string) (*User, error) {
 	errParse := json.Unmarshal(read, &user)
 
 	if errParse != nil {
+		log.Fatalln(errParse.Error())
 		return nil, errorset.ErrOAuth
 	}
 
@@ -109,6 +119,7 @@ func (g *Github) GetUser(code string) (*User, error) {
 	accessToken, errAccessToken := g.getAccessToken(code)
 
 	if errAccessToken != nil {
+		log.Fatalln(errAccessToken.Error())
 		return nil, errorset.ErrOAuth
 	}
 

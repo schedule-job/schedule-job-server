@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -29,6 +30,7 @@ func (p *PostgresSQL) InsertJob(name, description, author string, members []stri
 	})
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return "", errorset.ErrSQL
 	}
 
@@ -46,6 +48,7 @@ func (p *PostgresSQL) UpdateJob(job_id, name, description, author string, member
 	})
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return errorset.ErrSQL
 	}
 
@@ -63,6 +66,7 @@ func (p *PostgresSQL) DeleteJob(job_id string) error {
 	})
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return errorset.ErrSQL
 	}
 
@@ -88,6 +92,7 @@ func (p *PostgresSQL) SelectJob(job_id string) (*jobInfo, error) {
 	})
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return nil, errorset.ErrSQL
 	}
 
@@ -131,6 +136,7 @@ func (p *PostgresSQL) SelectJobs(user, lastId string, limit int) (*[]jobInfo, er
 	})
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return nil, errorset.ErrSQL
 	}
 

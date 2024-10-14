@@ -1,6 +1,8 @@
 package job
 
 import (
+	"log"
+
 	"github.com/schedule-job/schedule-job-server/internal/errorset"
 	"github.com/schedule-job/schedule-job-server/internal/pg"
 )
@@ -35,6 +37,7 @@ func (j *Job) InsertJob(item InsertItem) (string, error) {
 	id, err := j.db.InsertJob(item.Info.Name, item.Info.Description, item.Info.Author, item.Info.Members)
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return "", errorset.ErrDatabase
 	}
 
@@ -42,6 +45,7 @@ func (j *Job) InsertJob(item InsertItem) (string, error) {
 
 	if errAction != nil {
 		j.db.DeleteJob(id)
+		log.Fatalln(errAction.Error())
 		return "", errorset.ErrDatabase
 	}
 
@@ -50,6 +54,7 @@ func (j *Job) InsertJob(item InsertItem) (string, error) {
 	if errTrigger != nil {
 		j.db.DeleteAction(id)
 		j.db.DeleteJob(id)
+		log.Fatalln(errTrigger.Error())
 		return "", errorset.ErrDatabase
 	}
 

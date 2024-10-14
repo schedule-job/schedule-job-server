@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/schedule-job/schedule-job-server/internal/errorset"
@@ -24,6 +25,7 @@ func (p *PostgresSQL) InsertTrigger(job_id, name string, payload map[string]inte
 	})
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return errorset.ErrSQL
 	}
 
@@ -45,6 +47,7 @@ func (p *PostgresSQL) DeleteTrigger(job_id string) error {
 	})
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return errorset.ErrSQL
 	}
 
@@ -68,6 +71,7 @@ func (p *PostgresSQL) SelectTrigger(job_id string) (*triggerInfo, error) {
 	})
 
 	if err != nil {
+		log.Fatalln(err.Error())
 		return nil, errorset.ErrSQL
 	}
 

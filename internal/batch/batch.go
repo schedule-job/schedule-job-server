@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -34,6 +34,7 @@ func (b *Batch) request(path string, body io.Reader) ([]byte, error) {
 			if errResp == context.DeadlineExceeded {
 				continue
 			}
+			log.Fatalln(errResp.Error())
 			return nil, errResp
 		}
 
@@ -41,13 +42,15 @@ func (b *Batch) request(path string, body io.Reader) ([]byte, error) {
 
 		body, errRead := io.ReadAll(resp.Body)
 		if errRead != nil {
+			log.Fatalln(errRead.Error())
 			return nil, errRead
 		}
 
 		return body, nil
 	}
 
-	return nil, errors.New("no agent url")
+	log.Fatalln("no batch url")
+	return nil, errorset.ErrInternalServer
 }
 
 func (b *Batch) toTime(data []byte) (*time.Time, error) {
@@ -56,6 +59,7 @@ func (b *Batch) toTime(data []byte) (*time.Time, error) {
 	var errUnmarshal = json.Unmarshal([]byte(string(data)), &result)
 
 	if errUnmarshal != nil {
+		log.Fatalln(errUnmarshal.Error())
 		return nil, errUnmarshal
 	}
 
@@ -63,6 +67,7 @@ func (b *Batch) toTime(data []byte) (*time.Time, error) {
 	t, errParse := time.Parse(layout, result["data"].(string))
 
 	if errParse != nil {
+		log.Fatalln(errParse.Error())
 		return nil, errParse
 	}
 
@@ -75,6 +80,7 @@ func (b *Batch) toJson(data []byte) (interface{}, error) {
 	var errUnmarshal = json.Unmarshal([]byte(string(data)), &result)
 
 	if errUnmarshal != nil {
+		log.Fatalln(errUnmarshal.Error())
 		return nil, errUnmarshal
 	}
 
@@ -86,18 +92,21 @@ func (b *Batch) GetPreNextSchedule(name string, payload map[string]interface{}) 
 	body, errMarshal := json.Marshal(payload)
 
 	if errMarshal != nil {
+		log.Fatalln(errMarshal.Error())
 		return nil, errMarshal
 	}
 
 	data, errReq := b.request(path, bytes.NewBuffer(body))
 
 	if errReq != nil {
+		log.Fatalln(errReq.Error())
 		return nil, errorset.ErrInternalServer
 	}
 
 	time, errTime := b.toTime(data)
 
 	if errTime != nil {
+		log.Fatalln(errTime.Error())
 		return nil, errorset.ErrInternalServer
 	}
 
@@ -110,12 +119,14 @@ func (b *Batch) GetNextSchedule(id string) (*time.Time, error) {
 	data, errReq := b.request(path, nil)
 
 	if errReq != nil {
+		log.Fatalln(errReq.Error())
 		return nil, errorset.ErrInternalServer
 	}
 
 	time, errTime := b.toTime(data)
 
 	if errTime != nil {
+		log.Fatalln(errTime.Error())
 		return nil, errorset.ErrInternalServer
 	}
 
@@ -127,18 +138,21 @@ func (b *Batch) GetPreNextInfo(name string, payload map[string]interface{}) (int
 	body, errMarshal := json.Marshal(payload)
 
 	if errMarshal != nil {
+		log.Fatalln(errMarshal.Error())
 		return nil, errMarshal
 	}
 
 	data, errReq := b.request(path, bytes.NewBuffer(body))
 
 	if errReq != nil {
+		log.Fatalln(errReq.Error())
 		return nil, errorset.ErrInternalServer
 	}
 
 	json, errJson := b.toJson(data)
 
 	if errJson != nil {
+		log.Fatalln(errJson.Error())
 		return nil, errorset.ErrInternalServer
 	}
 
@@ -151,12 +165,14 @@ func (b *Batch) GetNextInfo(id string) (interface{}, error) {
 	data, errReq := b.request(path, nil)
 
 	if errReq != nil {
+		log.Fatalln(errReq.Error())
 		return nil, errorset.ErrInternalServer
 	}
 
 	json, errJson := b.toJson(data)
 
 	if errJson != nil {
+		log.Fatalln(errJson.Error())
 		return nil, errorset.ErrInternalServer
 	}
 
@@ -169,6 +185,7 @@ func (b *Batch) Progress() error {
 	_, errReq := b.request(path, nil)
 
 	if errReq != nil {
+		log.Fatalln(errReq.Error())
 		return errorset.ErrInternalServer
 	}
 
@@ -181,6 +198,7 @@ func (b *Batch) ProgressOnce(id string) error {
 	_, errReq := b.request(path, nil)
 
 	if errReq != nil {
+		log.Fatalln(errReq.Error())
 		return errorset.ErrInternalServer
 	}
 
