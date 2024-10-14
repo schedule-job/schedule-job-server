@@ -7,6 +7,7 @@
 CREATE TABLE job
 (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    job_id uuid NOT NULL DEFAULT uuid_generate_v4(),
     name text NOT NULL,
     description text NOT NULL,
     author text NOT NULL,
@@ -23,11 +24,6 @@ CREATE TABLE action
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     job_id uuid NOT NULL,
     PRIMARY KEY (id),
-    CONSTRAINT job_id FOREIGN KEY (job_id)
-        REFERENCES job (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE CASCADE
-        NOT VALID
 );
 
 CREATE TABLE trigger
@@ -38,9 +34,4 @@ CREATE TABLE trigger
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     job_id uuid NOT NULL,
     PRIMARY KEY (id),
-        CONSTRAINT job_id FOREIGN KEY (job_id)
-        REFERENCES job (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE CASCADE
-        NOT VALID
 );

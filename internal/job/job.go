@@ -8,22 +8,22 @@ type Job struct {
 	db *pg.PostgresSQL
 }
 
-type info struct {
+type Info struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	Author      string   `json:"author"`
 	Members     []string `json:"members"`
 }
 
-type item struct {
+type Item struct {
 	Name    string                 `json:"name"`
 	Payload map[string]interface{} `json:"payload"`
 }
 
 type InsertItem struct {
-	Info    info `json:"info"`
-	Action  item `json:"action"`
-	Trigger item `json:"trigger"`
+	Info    Info `json:"info"`
+	Action  Item `json:"action"`
+	Trigger Item `json:"trigger"`
 }
 
 func (j *Job) SetDatabase(db *pg.PostgresSQL) {
@@ -55,8 +55,8 @@ func (j *Job) InsertJob(item InsertItem) (string, error) {
 	return id, nil
 }
 
-func (j *Job) DeleteJob(id string) {
-	j.db.DeleteAction(id)
-	j.db.DeleteTrigger(id)
-	j.db.DeleteJob(id)
+func (j *Job) DeleteJob(job_id string) {
+	j.db.DeleteAction(job_id)
+	j.db.DeleteTrigger(job_id)
+	j.db.DeleteJob(job_id)
 }

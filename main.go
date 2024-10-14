@@ -139,9 +139,9 @@ func main() {
 		encoder.Encode(gin.H{"code": 200, "data": providers})
 	})
 
-	router.GET("/api/v1/logs/:jobId", func(ctx *gin.Context) {
+	router.GET("/api/v1/logs/:job_id", func(ctx *gin.Context) {
 		limit := 0
-		jobId := ctx.Param("jobId")
+		jobId := ctx.Param("job_id")
 		lastId := ctx.Query("last_id")
 
 		if ctx.Query("limit") != "" {
@@ -161,8 +161,8 @@ func main() {
 		ctx.Data(200, "application/json", body)
 	})
 
-	router.GET("/api/v1/logs/:jobId/:id", func(ctx *gin.Context) {
-		jobId := ctx.Param("jobId")
+	router.GET("/api/v1/logs/:job_id/:id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
 		id := ctx.Param("id")
 
 		body, err := agentApi.GetLog(jobId, id)
@@ -195,10 +195,10 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": data})
 	})
 
-	router.POST("/api/v1/next/schedule/:id", func(ctx *gin.Context) {
-		id := ctx.Param("id")
+	router.POST("/api/v1/next/schedule/:job_id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
 
-		data, err := batchApi.GetNextSchedule(id)
+		data, err := batchApi.GetNextSchedule(jobId)
 
 		if err != nil {
 			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
@@ -228,10 +228,10 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": data})
 	})
 
-	router.POST("/api/v1/next/info/:id", func(ctx *gin.Context) {
-		id := ctx.Param("id")
+	router.POST("/api/v1/next/info/:job_id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
 
-		data, err := batchApi.GetNextInfo(id)
+		data, err := batchApi.GetNextInfo(jobId)
 
 		if err != nil {
 			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
@@ -241,10 +241,10 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": data})
 	})
 
-	router.POST("/api/v1/progress/:id", func(ctx *gin.Context) {
-		id := ctx.Param("id")
+	router.POST("/api/v1/progress/:job_id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
 
-		err := batchApi.ProgressOnce(id)
+		err := batchApi.ProgressOnce(jobId)
 
 		if err != nil {
 			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
@@ -273,18 +273,18 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": id})
 	})
 
-	router.DELETE("/api/v1/job/:id", func(ctx *gin.Context) {
-		id := ctx.Param("id")
+	router.DELETE("/api/v1/job/:job_id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
 
-		jobApi.DeleteJob(id)
+		jobApi.DeleteJob(jobId)
 
 		ctx.JSON(200, gin.H{"code": 200, "data": "ok"})
 	})
 
-	router.GET("/api/v1/job/:id", func(ctx *gin.Context) {
-		id := ctx.Param("id")
+	router.GET("/api/v1/job/:job_id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
 
-		info, err := database.SelectJob(id)
+		info, err := database.SelectJob(jobId)
 
 		if err != nil {
 			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
@@ -292,12 +292,39 @@ func main() {
 		}
 
 		ctx.JSON(200, gin.H{"code": 200, "data": info})
+	})
+
+	router.PUT("/api/v1/job/:job_id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
+		payload := job.Info{}
+		bindErr := ctx.BindJSON(&payload)
+
+		if bindErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+			return
+		}
+
+		_, err := database.SelectJob(jobId)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		updateErr := database.UpdateJob(jobId, payload.Name, payload.Description, payload.Author, payload.Members)
+
+		if updateErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": updateErr.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": "ok"})
 	})
 
 	router.GET("/api/v1/action/:job_id", func(ctx *gin.Context) {
-		job_id := ctx.Param("job_id")
+		jobId := ctx.Param("job_id")
 
-		info, err := database.SelectAction(job_id)
+		info, err := database.SelectAction(jobId)
 
 		if err != nil {
 			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
@@ -307,10 +334,37 @@ func main() {
 		ctx.JSON(200, gin.H{"code": 200, "data": info})
 	})
 
-	router.GET("/api/v1/trigger/:job_id", func(ctx *gin.Context) {
-		job_id := ctx.Param("job_id")
+	router.PUT("/api/v1/action/:job_id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
+		payload := job.Item{}
+		bindErr := ctx.BindJSON(&payload)
 
-		info, err := database.SelectTrigger(job_id)
+		if bindErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+			return
+		}
+
+		_, err := database.SelectAction(jobId)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		insertErr := database.UpdateAction(jobId, payload.Name, payload.Payload)
+
+		if insertErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": insertErr.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": "ok"})
+	})
+
+	router.GET("/api/v1/trigger/:job_id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
+
+		info, err := database.SelectTrigger(jobId)
 
 		if err != nil {
 			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
@@ -318,6 +372,33 @@ func main() {
 		}
 
 		ctx.JSON(200, gin.H{"code": 200, "data": info})
+	})
+
+	router.PUT("/api/v1/trigger/:job_id", func(ctx *gin.Context) {
+		jobId := ctx.Param("job_id")
+		payload := job.Item{}
+		bindErr := ctx.BindJSON(&payload)
+
+		if bindErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": bindErr.Error()})
+			return
+		}
+
+		_, err := database.SelectTrigger(jobId)
+
+		if err != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": err.Error()})
+			return
+		}
+
+		insertErr := database.UpdateTrigger(jobId, payload.Name, payload.Payload)
+
+		if insertErr != nil {
+			ctx.JSON(400, gin.H{"code": 400, "message": insertErr.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"code": 200, "data": "ok"})
 	})
 
 	router.NoRoute(func(ctx *gin.Context) {
