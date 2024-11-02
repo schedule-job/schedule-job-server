@@ -3,8 +3,8 @@ package job
 import (
 	"log"
 
+	"github.com/schedule-job/schedule-job-database/pg"
 	"github.com/schedule-job/schedule-job-server/internal/errorset"
-	"github.com/schedule-job/schedule-job-server/internal/pg"
 )
 
 type Job struct {

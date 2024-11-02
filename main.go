@@ -9,12 +9,12 @@ import (
 	parser "github.com/Sotaneum/go-args-parser"
 	"github.com/gin-gonic/gin"
 	ginsession "github.com/go-session/gin-session"
+	"github.com/schedule-job/schedule-job-database/pg"
 	"github.com/schedule-job/schedule-job-server/internal/agent"
 	"github.com/schedule-job/schedule-job-server/internal/batch"
 	"github.com/schedule-job/schedule-job-server/internal/errorset"
 	"github.com/schedule-job/schedule-job-server/internal/job"
 	"github.com/schedule-job/schedule-job-server/internal/oauth"
-	"github.com/schedule-job/schedule-job-server/internal/pg"
 )
 
 type Options struct {
