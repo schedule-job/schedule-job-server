@@ -20,16 +20,12 @@ type Options struct {
 	Port           string
 	PostgresSqlDsn string
 	TrustedProxies []string
-	AgentUrls      []string
-	BatchUrls      []string
 }
 
 var DEFAULT_OPTIONS = map[string]string{
 	"PORT":             "8080",
 	"POSTGRES_SQL_DSN": "",
 	"TRUSTED_PROXIES":  "",
-	"AGENT_URLS":       "",
-	"BATCH_URLS":       "",
 }
 
 func getOptions() *Options {
@@ -42,16 +38,6 @@ func getOptions() *Options {
 		options.TrustedProxies = strings.Split(rawOptions["TRUSTED_PROXIES"], ",")
 	} else {
 		options.TrustedProxies = []string{}
-	}
-	if rawOptions["AGENT_URLS"] != "" {
-		options.AgentUrls = strings.Split(rawOptions["AGENT_URLS"], ",")
-	} else {
-		options.AgentUrls = []string{}
-	}
-	if rawOptions["BATCH_URLS"] != "" {
-		options.BatchUrls = strings.Split(rawOptions["BATCH_URLS"], ",")
-	} else {
-		options.BatchUrls = []string{}
 	}
 
 	return options
