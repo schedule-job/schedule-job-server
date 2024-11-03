@@ -72,6 +72,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
+github.com/schedule-job/schedule-job-authorization v1.0.0-alpha.1 h1:lTYPvitO/M2KOxp5uOtvbg5rwVSotLqoa9ckQWkl/fE=
+github.com/schedule-job/schedule-job-authorization v1.0.0-alpha.1/go.mod h1:1clr1O93FG4uL72LeOxSNNaBEe/9NGLJcDW/Cx/eAnI=
 github.com/schedule-job/schedule-job-database v1.0.0-alpha.1 h1:uiTieDC7WwSku35qGoap7vDMxkuYQPSneYb4eMNaYuA=
 github.com/schedule-job/schedule-job-database v1.0.0-alpha.1/go.mod h1:Vqln7geagW1IoB9i+ltxpkpl4KEmMYw/1WdjcDv4CQQ=
 github.com/smarty/assertions v1.15.0 h1:cR//PqUBUiQRakZWqBiFFQ9wb8emQGDb0HeGdqGByCY=
