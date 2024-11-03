@@ -3,12 +3,12 @@ package job
 import (
 	"log"
 
-	"github.com/schedule-job/schedule-job-database/pg"
+	"github.com/schedule-job/schedule-job-database/core"
 	"github.com/schedule-job/schedule-job-server/internal/errorset"
 )
 
 type Job struct {
-	db *pg.PostgresSQL
+	db core.Database
 }
 
 type Info struct {
@@ -29,7 +29,7 @@ type InsertItem struct {
 	Trigger Item `json:"trigger"`
 }
 
-func (j *Job) SetDatabase(db *pg.PostgresSQL) {
+func (j *Job) SetDatabase(db core.Database) {
 	j.db = db
 }
 
