@@ -74,10 +74,10 @@ github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/schedule-job/schedule-job-authorization v1.0.0-alpha.1 h1:lTYPvitO/M2KOxp5uOtvbg5rwVSotLqoa9ckQWkl/fE=
 github.com/schedule-job/schedule-job-authorization v1.0.0-alpha.1/go.mod h1:1clr1O93FG4uL72LeOxSNNaBEe/9NGLJcDW/Cx/eAnI=
-github.com/schedule-job/schedule-job-database v1.0.0-alpha.6 h1:fLFc7z9pjSSzaGaZDLdiCwYWrtuU9Nj8p5ZMs5E63ps=
-github.com/schedule-job/schedule-job-database v1.0.0-alpha.6/go.mod h1:Vqln7geagW1IoB9i+ltxpkpl4KEmMYw/1WdjcDv4CQQ=
-github.com/schedule-job/schedule-job-gateway v1.0.0-alpha.1 h1:sxmo+E5Xv2ZOxjJOWYGxPAdRecXxDrS6TrQiKoHbExs=
-github.com/schedule-job/schedule-job-gateway v1.0.0-alpha.1/go.mod h1:4V3u1c8QLcQxgkK+dqC42o9dam131bKeq0wPIvk66iY=
+github.com/schedule-job/schedule-job-database v1.0.0-alpha.8 h1:U9ORX001yX6JTKrjCBjjZeJu5RqaKETCCcZ3wN27A+w=
+github.com/schedule-job/schedule-job-database v1.0.0-alpha.8/go.mod h1:Vqln7geagW1IoB9i+ltxpkpl4KEmMYw/1WdjcDv4CQQ=
+github.com/schedule-job/schedule-job-gateway v1.0.0-alpha.2 h1:In8MQRx+jTGFbhJ2tSq/M/3sU2ExXtDX45stuSi73BY=
+github.com/schedule-job/schedule-job-gateway v1.0.0-alpha.2/go.mod h1:b6hIS5fIF830wh3cC4F+9oRSIu6YakYQx51j3JcRHDI=
 github.com/smarty/assertions v1.15.0 h1:cR//PqUBUiQRakZWqBiFFQ9wb8emQGDb0HeGdqGByCY=
 github.com/smarty/assertions v1.15.0/go.mod h1:yABtdzeQs6l1brC900WlRNwj6ZR55d7B+E8C6HtKdec=
 github.com/smartystreets/goconvey v1.8.1 h1:qGjIddxOk4grTu9JPOU31tVfq3cNdBlNa5sSznIX1xY=

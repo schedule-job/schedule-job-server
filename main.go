@@ -11,6 +11,7 @@ import (
 	ginsession "github.com/go-session/gin-session"
 	oauth "github.com/schedule-job/schedule-job-authorization/core"
 	oauthGithub "github.com/schedule-job/schedule-job-authorization/github"
+	db "github.com/schedule-job/schedule-job-database/core"
 	"github.com/schedule-job/schedule-job-database/pg"
 	gateway "github.com/schedule-job/schedule-job-gateway"
 	"github.com/schedule-job/schedule-job-server/internal/errorset"
@@ -246,7 +247,7 @@ func main() {
 	})
 
 	router.POST("/api/v1/job", func(ctx *gin.Context) {
-		payload := gateway.InsertItem{}
+		payload := gateway.Item{}
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
@@ -312,7 +313,7 @@ func main() {
 
 	router.PUT("/api/v1/job/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
-		payload := gateway.Info{}
+		payload := db.Job{}
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
@@ -352,7 +353,7 @@ func main() {
 
 	router.PUT("/api/v1/action/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
-		payload := gateway.Item{}
+		payload := db.Action{}
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
@@ -392,7 +393,7 @@ func main() {
 
 	router.PUT("/api/v1/trigger/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
-		payload := gateway.Item{}
+		payload := db.Trigger{}
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
