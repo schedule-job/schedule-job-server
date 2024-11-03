@@ -12,10 +12,8 @@ import (
 	oauth "github.com/schedule-job/schedule-job-authorization/core"
 	oauthGithub "github.com/schedule-job/schedule-job-authorization/github"
 	"github.com/schedule-job/schedule-job-database/pg"
-	"github.com/schedule-job/schedule-job-server/internal/agent"
-	"github.com/schedule-job/schedule-job-server/internal/batch"
+	gateway "github.com/schedule-job/schedule-job-gateway"
 	"github.com/schedule-job/schedule-job-server/internal/errorset"
-	"github.com/schedule-job/schedule-job-server/internal/job"
 )
 
 type Options struct {
@@ -80,15 +78,9 @@ func main() {
 	}
 
 	database := pg.New(options.PostgresSqlDsn)
-
-	agentApi := agent.Agent{}
-	agentApi.SetAgentUrls(options.AgentUrls)
-
-	batchApi := batch.Batch{}
-	batchApi.SetBatchUrls(options.BatchUrls)
-
-	jobApi := job.Job{}
-	jobApi.SetDatabase(database)
+	agentApi := gateway.Agent{DB: database}
+	batchApi := gateway.Batch{DB: database}
+	jobApi := gateway.Job{DB: database}
 
 	var authorizations, queryError = database.SelectAuthorizations()
 
@@ -268,7 +260,7 @@ func main() {
 	})
 
 	router.POST("/api/v1/job", func(ctx *gin.Context) {
-		payload := job.InsertItem{}
+		payload := gateway.InsertItem{}
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
@@ -334,7 +326,7 @@ func main() {
 
 	router.PUT("/api/v1/job/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
-		payload := job.Info{}
+		payload := gateway.Info{}
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
@@ -374,7 +366,7 @@ func main() {
 
 	router.PUT("/api/v1/action/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
-		payload := job.Item{}
+		payload := gateway.Item{}
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
@@ -414,7 +406,7 @@ func main() {
 
 	router.PUT("/api/v1/trigger/:job_id", func(ctx *gin.Context) {
 		jobId := ctx.Param("job_id")
-		payload := job.Item{}
+		payload := gateway.Item{}
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
