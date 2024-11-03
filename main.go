@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	ginsession "github.com/go-session/gin-session"
 	oauth "github.com/schedule-job/schedule-job-authorization/core"
+	oauthGithub "github.com/schedule-job/schedule-job-authorization/github"
 	"github.com/schedule-job/schedule-job-database/pg"
 	"github.com/schedule-job/schedule-job-server/internal/agent"
 	"github.com/schedule-job/schedule-job-server/internal/batch"
@@ -88,6 +89,17 @@ func main() {
 
 	jobApi := job.Job{}
 	jobApi.SetDatabase(database)
+
+	var authorizations, queryError = database.SelectAuthorizations()
+
+	if queryError != nil {
+		for _, authorization := range authorizations {
+			if authorization.Name == "github" {
+				github := authorization.Payload.(oauthGithub.Github)
+				oauth.Core.AddProvider(authorization.Name, &github)
+			}
+		}
+	}
 
 	router := gin.Default()
 	router.Use(ginsession.New())
