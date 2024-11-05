@@ -13,8 +13,8 @@ import (
 	oauthGithub "github.com/schedule-job/schedule-job-authorization/github"
 	db "github.com/schedule-job/schedule-job-database/core"
 	"github.com/schedule-job/schedule-job-database/pg"
+	schedule_errors "github.com/schedule-job/schedule-job-errors"
 	gateway "github.com/schedule-job/schedule-job-gateway"
-	"github.com/schedule-job/schedule-job-server/internal/errorset"
 )
 
 type Options struct {
@@ -58,10 +58,10 @@ func safeGo(f func()) {
 func main() {
 	options := getOptions()
 	if len(options.PostgresSqlDsn) == 0 {
-		panic("not found 'POSTGRES_SQL_DSN' options")
+		panic(schedule_errors.InvalidArgumentError{Param: "POSTGRES_SQL_DSN", Message: "not found"})
 	}
 	if len(options.Port) == 0 {
-		panic("not found 'PORT' options")
+		panic(schedule_errors.InvalidArgumentError{Param: "PORT", Message: "not found"})
 	}
 
 	database := pg.New(options.PostgresSqlDsn)
@@ -100,7 +100,7 @@ func main() {
 		name := ctx.Param("name")
 		user, errUser := oauth.Core.GetUser(name, ctx.Query("code"))
 		if errUser != nil {
-			ctx.AbortWithError(403, errorset.ErrForbidden)
+			ctx.AbortWithError(403, &schedule_errors.ForbiddenError{})
 			return
 		}
 
@@ -111,7 +111,7 @@ func main() {
 		errStore := store.Save()
 
 		if errStore != nil {
-			ctx.AbortWithError(500, errorset.ErrInternalServer)
+			ctx.AbortWithError(500, &schedule_errors.InternalServerError{Err: errStore})
 			return
 		}
 
@@ -119,12 +119,7 @@ func main() {
 	})
 
 	router.GET("/auth/providers", func(ctx *gin.Context) {
-		providers, err := oauth.Core.GetProviders()
-
-		if err != nil {
-			ctx.AbortWithError(500, errorset.ErrInternalServer)
-			return
-		}
+		providers := oauth.Core.GetProviders()
 
 		encoder := json.NewEncoder(ctx.Writer)
 		encoder.SetEscapeHTML(false)
@@ -173,14 +168,14 @@ func main() {
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, &schedule_errors.InvalidArgumentError{Param: "body", Message: errBind.Error()})
 			return
 		}
 
 		data, err := batchApi.GetPreNextSchedule(name, payload)
 
 		if err != nil {
-			ctx.AbortWithError(500, errorset.ErrInternalServer)
+			ctx.AbortWithError(500, err)
 			return
 		}
 
@@ -193,7 +188,7 @@ func main() {
 		data, err := batchApi.GetNextSchedule(jobId)
 
 		if err != nil {
-			ctx.AbortWithError(500, errorset.ErrInternalServer)
+			ctx.AbortWithError(500, err)
 			return
 		}
 
@@ -206,7 +201,7 @@ func main() {
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, &schedule_errors.InvalidArgumentError{Param: "body", Message: errBind.Error()})
 			return
 		}
 
@@ -226,7 +221,7 @@ func main() {
 		data, err := batchApi.GetNextInfo(jobId)
 
 		if err != nil {
-			ctx.AbortWithError(500, errorset.ErrInternalServer)
+			ctx.AbortWithError(500, err)
 			return
 		}
 
@@ -239,7 +234,7 @@ func main() {
 		err := batchApi.ProgressOnce(jobId)
 
 		if err != nil {
-			ctx.AbortWithError(500, errorset.ErrInternalServer)
+			ctx.AbortWithError(500, err)
 			return
 		}
 
@@ -251,14 +246,14 @@ func main() {
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, &schedule_errors.InvalidArgumentError{Param: "body", Message: errBind.Error()})
 			return
 		}
 
 		id, errInsert := jobApi.InsertJob(payload)
 
 		if errInsert != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, errInsert)
 			return
 		}
 
@@ -276,14 +271,14 @@ func main() {
 		email, has := store.Get("userEmail")
 
 		if !has {
-			ctx.AbortWithError(401, errorset.ErrOAuth)
+			ctx.AbortWithError(401, &schedule_errors.UnauthorizedError{Reason: "not logged in"})
 			return
 		}
 
 		body, err := database.SelectJobs(email.(string), lastId, limit)
 
 		if err != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, err)
 			return
 		}
 
@@ -304,7 +299,7 @@ func main() {
 		info, err := database.SelectJob(jobId)
 
 		if err != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, err)
 			return
 		}
 
@@ -317,21 +312,21 @@ func main() {
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, &schedule_errors.InvalidArgumentError{Param: "body", Message: errBind.Error()})
 			return
 		}
 
 		_, err := database.SelectJob(jobId)
 
 		if err != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, err)
 			return
 		}
 
 		errUpdate := database.UpdateJob(jobId, payload.Name, payload.Description, payload.Author, payload.Members)
 
 		if errUpdate != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, errUpdate)
 			return
 		}
 
@@ -344,7 +339,7 @@ func main() {
 		info, err := database.SelectAction(jobId)
 
 		if err != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, err)
 			return
 		}
 
@@ -357,21 +352,21 @@ func main() {
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, &schedule_errors.InvalidArgumentError{Param: "body", Message: errBind.Error()})
 			return
 		}
 
 		_, err := database.SelectAction(jobId)
 
 		if err != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, err)
 			return
 		}
 
 		errInsert := database.UpdateAction(jobId, payload.Name, payload.Payload)
 
 		if errInsert != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, errInsert)
 			return
 		}
 
@@ -384,7 +379,7 @@ func main() {
 		info, err := database.SelectTrigger(jobId)
 
 		if err != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, err)
 			return
 		}
 
@@ -397,21 +392,21 @@ func main() {
 		errBind := ctx.BindJSON(&payload)
 
 		if errBind != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, &schedule_errors.InvalidArgumentError{Param: "body", Message: errBind.Error()})
 			return
 		}
 
 		_, err := database.SelectTrigger(jobId)
 
 		if err != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, err)
 			return
 		}
 
 		errInsert := database.UpdateTrigger(jobId, payload.Name, payload.Payload)
 
 		if errInsert != nil {
-			ctx.AbortWithError(400, errorset.ErrParams)
+			ctx.AbortWithError(400, errInsert)
 			return
 		}
 
