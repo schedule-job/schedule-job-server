@@ -363,7 +363,7 @@ func main() {
 			return
 		}
 
-		errInsert := database.UpdateAction(jobId, payload.Name, payload.Payload)
+		errInsert := database.UpdateAction(jobId, payload.Name, payload.Type, payload.Payload)
 
 		if errInsert != nil {
 			ctx.AbortWithError(400, errInsert)

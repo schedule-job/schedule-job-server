@@ -74,8 +74,8 @@ github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/schedule-job/schedule-job-authorization v1.0.0-alpha.2 h1:v0ZMUjeXIEZwpq9eYczptsKX626RfgqQbngZVHhnBCo=
 github.com/schedule-job/schedule-job-authorization v1.0.0-alpha.2/go.mod h1:JyzVSy09WTP0Rl2LTOj2lr3fhhZGOIzvpZO+UxWTbcg=
-github.com/schedule-job/schedule-job-database v1.0.0-alpha.8 h1:U9ORX001yX6JTKrjCBjjZeJu5RqaKETCCcZ3wN27A+w=
-github.com/schedule-job/schedule-job-database v1.0.0-alpha.8/go.mod h1:Vqln7geagW1IoB9i+ltxpkpl4KEmMYw/1WdjcDv4CQQ=
+github.com/schedule-job/schedule-job-database v1.0.0-alpha.12 h1:M59EYfR1xkcSkZZotZ9Oxu6qcwjjUX1GFkf2SZ73HPM=
+github.com/schedule-job/schedule-job-database v1.0.0-alpha.12/go.mod h1:ILKJ90HvjIJvCxX4Zeh1Z9dpAFBHk1zEiIuz7FhDL/w=
 github.com/schedule-job/schedule-job-errors v1.0.0-alpha.1 h1:iSWNl8DyWxusEpZEeaz+oLjN9pyZ3zyRxYkq4qERINg=
 github.com/schedule-job/schedule-job-errors v1.0.0-alpha.1/go.mod h1:ohL4wIYRijsaj2d5+vkrTSeC9mS5R1Ofc+kUulsFWlc=
 github.com/schedule-job/schedule-job-gateway v1.0.0-alpha.3 h1:2pD/2KiUNboVKaceaEsdhCsEz5+xd1iIGxMTjmfXM8A=
