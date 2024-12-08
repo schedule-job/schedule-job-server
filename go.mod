@@ -6,7 +6,7 @@ require (
 	github.com/Sotaneum/go-args-parser v1.0.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/schedule-job/schedule-job-errors v1.0.0-alpha.1
-	github.com/schedule-job/schedule-job-gateway v1.0.0-alpha.3
+	github.com/schedule-job/schedule-job-gateway v1.0.0-alpha.5
 )
 
 require (
